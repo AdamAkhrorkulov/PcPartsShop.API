@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PcPartsShop.API.Data;
@@ -6,6 +7,7 @@ using PcPartsShop.API.DTOs.Products;
 using PcPartsShop.API.Models;
 using PcPartsShop.API.Repository;
 using PcPartsShop.API.Repository.ProductReoisitory;
+using PcPartsShop.API.Services.ProductServices;
 
 namespace PcPartsShop.API.Controllers
 {
@@ -13,72 +15,48 @@ namespace PcPartsShop.API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        
-        private readonly IProductRepository _productRepo;
-        private readonly IMapper _mapper;
+        private readonly IProductService _productService;
 
-        public ProductsController(IProductRepository productRepo, IMapper mapper)
+
+        public ProductsController(IProductService productService)
         {
-            _productRepo = productRepo;
-            _mapper = mapper;
+            _productService = productService;
         }
 
+        [AllowAnonymous]
         [HttpGet("GetAll")] 
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllProducts()
         {
-            var allProducts = await _productRepo.GetWithRelationsAsync();
-
-            var productDto = _mapper.Map<IEnumerable<ProductDto>>(allProducts);
-            return Ok(productDto);  
+            return Ok(await _productService.GetAllAsync());
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetById(int id)
         {
-            var product = await _productRepo.GetByIdWithRelationsAsync(id);
-            if (product is null)
-                return NotFound($"Product with ID {id} not found.");
-
-            var productDto = _mapper.Map<ProductDto>(product);
-
-            return Ok(productDto);
+            return Ok(await _productService.GetByIdAsync(id));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<ProductDto>> Create(CreateProductDto dto)
         {
-            var productEntity = _mapper.Map<Product>(dto);  
-
-            var product = await _productRepo.AddAsync(productEntity);
-
-            var productDto = _mapper.Map<ProductDto>(product);
-            return CreatedAtAction(nameof(GetAllProducts), new { id = product.Id }, productDto);
+            var productDto = await _productService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetAllProducts), new { id = productDto.Id }, productDto);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, UpdateProductDto updateProduct)
+        public async Task<ActionResult> Update(int id, UpdateProductDto dto)
         {
-            var product = await _productRepo.GetByIdAsync(id);
-            if (product is null)
-                return NotFound($"Product with ID {id} not found.");
-
-            _mapper.Map(updateProduct, product);
-            await _productRepo.UpdateAsync(product);
-
-            return NoContent();
+            await _productService.UpdateAsync(id, dto);
+            return NoContent();   
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _productRepo.GetByIdAsync(id);
-            if (product is null)    
-            {
-                return NotFound($"Product with {id} does not exists!");
-            }
-
-            await _productRepo.DeleteAsync(product);
+            await _productService.DeleteAsync(id);
             return NoContent();
         }
     }

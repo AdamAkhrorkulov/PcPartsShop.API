@@ -13,7 +13,7 @@ namespace PcPartsShop.API.Repository.ProductReoisitory
         {
             _context = context;
         }
-        public async Task<IEnumerable<Product>> GetWithRelationsAsync()
+        public async Task<IEnumerable<Product>> GetAllWithDetailsAsync()
         {
             return await _context.Products
                 .Include(p => p.Brand)
@@ -21,7 +21,7 @@ namespace PcPartsShop.API.Repository.ProductReoisitory
                 .ToListAsync();
         }   
 
-        public async Task<Product> GetByIdWithRelationsAsync(int id)
+        public async Task<Product> GetByIdWithDetailsAsync(int id)
         {
             return await _context.Products
                 .Include(p => p.Brand)
@@ -29,5 +29,6 @@ namespace PcPartsShop.API.Repository.ProductReoisitory
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
     }
-
+        
 }
+    

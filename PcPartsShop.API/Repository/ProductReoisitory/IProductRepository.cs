@@ -4,7 +4,8 @@ namespace PcPartsShop.API.Repository.ProductReoisitory
 {
     public interface IProductRepository : IGenericRepository<Product>
     {
-        Task<Product> GetByIdWithRelationsAsync(int id);
-        Task<IEnumerable<Product>> GetWithRelationsAsync();
+        Task<IEnumerable<Product>> GetAllWithDetailsAsync();
+        Task<Product> GetByIdWithDetailsAsync(int id);
     }
 }
+    
